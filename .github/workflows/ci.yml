@@ -28,7 +28,7 @@ jobs:
           persist-credentials: false
 
       - name: Install uv
-        uses: astral-sh/setup-uv@d0cc045d7cc869e9f05f3a0cd55c94744b5b25ee # v3
+        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.0.0
         with:
           enable-cache: true
 
@@ -40,23 +40,22 @@ jobs:
         run: uv run ruff check . --no-fix
 
       - name: Type check (fail-closed)
-        run: uv run mypy app/ --strict || true  # bootstrap tolerance; tighten later
+        run: uv run mypy app/ --strict
 
       - name: Test with coverage floor
         run: |
-          uv run pytest -n auto --cov=app --cov-fail-under=80 --cov-report=xml || true
+          uv run pytest -n auto --cov=app --cov-fail-under=80 --cov-report=xml
 
       - name: Secret scan
         uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf429fd1bcdfaadf7f
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true
 
       - name: Dependency audit
-        run: uv run pip-audit --strict --desc || true
+        run: uv run pip-audit --strict --desc
 
       - name: Static security (bandit)
-        run: uv run bandit -r app -lll || true
+        run: uv run bandit -r app -lll
 
       - name: Acceptance gate
         run: uv run python scripts/acceptance.py
@@ -75,7 +74,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Install uv
-        uses: astral-sh/setup-uv@d0cc045d7cc869e9f05f3a0cd55c94744b5b25ee
+        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.0.0
       - name: Build placeholder artifact
         run: |
           mkdir -p dist
