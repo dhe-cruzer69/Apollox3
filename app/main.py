@@ -2,8 +2,9 @@
 
 from typing import Any
 
-from app.proof import ProofEngine
 from fastapi import FastAPI
+
+from app.proof import ProofEngine
 
 app = FastAPI(
     title="cruzx-proofforge",
