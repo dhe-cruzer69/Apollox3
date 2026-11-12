@@ -28,7 +28,7 @@ jobs:
           persist-credentials: false
 
       - name: Install uv
-        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.0.0
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v6.0.0
         with:
           enable-cache: true
 
@@ -74,7 +74,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Install uv
-        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.0.0
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v6.0.0
       - name: Build placeholder artifact
         run: |
           mkdir -p dist
