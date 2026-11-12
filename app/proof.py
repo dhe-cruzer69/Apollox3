@@ -13,7 +13,8 @@ class ProofEngine:
     """Generate signed proof.json artifacts for AI-generated changes."""
 
     def __init__(self, signing_key: str | None = None) -> None:
-        self.signing_key = signing_key or os.getenv("CRUZX_SIGNING_KEY", "local-dev-key")
+        key = signing_key or os.getenv("CRUZX_SIGNING_KEY") or "local-dev-key"
+        self.signing_key: str = key
 
     def generate(self, payload: dict[str, Any]) -> dict[str, Any]:
         """Create a proof artifact from a change description."""
