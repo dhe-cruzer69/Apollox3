@@ -81,7 +81,7 @@ jobs:
           echo "proofforge-$(git rev-parse --short HEAD)" > dist/artifact.txt
           tar -czf dist/artifact.tar.gz dist/artifact.txt
       - name: Upload artifact
-        uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: provenance-${{ github.sha }}
           path: dist/
