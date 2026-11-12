@@ -1,8 +1,9 @@
 """Minimal FastAPI surface for proofforge (optional local server)."""
 
-from fastapi import FastAPI
+from typing import Any
 
 from app.proof import ProofEngine
+from fastapi import FastAPI
 
 app = FastAPI(
     title="cruzx-proofforge",
@@ -19,6 +20,6 @@ def health() -> dict[str, str]:
 
 
 @app.post("/proof")
-def create_proof(payload: dict) -> dict:
+def create_proof(payload: dict[str, Any]) -> dict[str, Any]:
     """Accept a change description and return a signed proof skeleton."""
     return engine.generate(payload)
