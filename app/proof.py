@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 
@@ -23,10 +23,12 @@ class ProofEngine:
 
         proof = {
             "version": "1.0",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "payload_sha256": digest,
             "signature": signature,
-            "signed_by": self.signing_key[:16] + "…" if len(self.signing_key) > 16 else self.signing_key,
+            "signed_by": (
+                self.signing_key[:16] + "…" if len(self.signing_key) > 16 else self.signing_key
+            ),
             "checks": payload.get("checks", ["unit", "integration"]),
             "status": "verified" if payload.get("tests_passed", True) else "failed",
             "policy": payload.get("policy", {}),
