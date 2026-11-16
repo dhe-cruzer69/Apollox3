@@ -4,7 +4,7 @@ from typing import Any
 
 from fastapi.testclient import TestClient
 
-from app.main import app
+from app.main import app, engine
 
 
 def _client() -> TestClient:
@@ -33,6 +33,22 @@ def test_create_proof_returns_signed_artifact() -> None:
     assert body["payload_sha256"]
     assert body["signature"]
     assert body["version"]
+
+    # The artifact must actually verify against the payload that produced it.
+    assert engine.verify(body, payload) is True
+
+
+def test_signed_artifact_does_not_verify_for_tampered_payload() -> None:
+    payload: dict[str, Any] = {
+        "change_id": "http-2",
+        "tests_passed": True,
+        "checks": ["unit"],
+    }
+
+    body = _client().post("/proof", json=payload).json()
+
+    tampered = {**payload, "tests_passed": False}
+    assert engine.verify(body, tampered) is False
 
 
 def test_create_proof_rejects_non_object_body() -> None:
