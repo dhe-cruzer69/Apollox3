@@ -50,7 +50,7 @@ def main() -> int:
 
     out = Path("proof.json")
     out.write_text(json.dumps(proof, indent=2) + "\n", encoding="utf-8")
-    print(f"Wrote locally verifiable demo artifact {out} (ephemeral key; not independently verifiable)")
+    print(f"Wrote demo artifact {out}; ephemeral key is not retained for independent verification")
     return 0
 
 
