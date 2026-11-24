@@ -1,29 +1,26 @@
 #!/usr/bin/env python3
-"""Blacksteel acceptance gate for cruzx-proofforge.
+"""Local consistency check for the HMAC proof format.
 
-Succeeds when a sample AI patch:
-1. Runs required tests (simulated)
-2. Produces proof.json
-3. Signs the artifact
-4. Can be verified
+This script uses an ephemeral demonstration key and simulated input. It does not
+prove that an external customer's tests were executed or provide durable signature
+verification after the process exits.
 """
 
 from __future__ import annotations
 
 import json
+import secrets
 import sys
 from pathlib import Path
 
-# Ensure package is importable
+# Ensure package is importable.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.proof import ProofEngine
 
 
 def main() -> int:
-    engine = ProofEngine(signing_key="acceptance-key")
-
-    # Simulate an AI-generated change
+    engine = ProofEngine(signing_key=secrets.token_hex(32))
     sample_payload = {
         "change_id": "demo-ai-patch-001",
         "files": ["src/example.py"],
@@ -37,29 +34,23 @@ def main() -> int:
     }
 
     proof = engine.generate(sample_payload)
-
-    # Write proof artifact
-    out = Path("proof.json")
-    out.write_text(json.dumps(proof, indent=2))
-    print(f"Wrote {out}")
-
-    # Verify
     if not engine.verify(proof, sample_payload):
         print("FAIL: proof verification failed")
         return 1
 
-    # Required fields check
-    required = ["version", "timestamp", "payload_sha256", "signature", "status"]
-    missing = [k for k in required if k not in proof]
+    required = ["version", "timestamp", "payload_sha256", "signature", "key_id", "status"]
+    missing = [key for key in required if key not in proof]
     if missing:
         print(f"FAIL: missing fields {missing}")
         return 1
 
     if proof["status"] != "verified":
-        print("FAIL: status is not verified")
+        print("FAIL: proof status does not reflect the supplied test assertion")
         return 1
 
-    print("✅ Acceptance gate passed — proof generated, signed, and verified")
+    out = Path("proof.json")
+    out.write_text(json.dumps(proof, indent=2) + "\n", encoding="utf-8")
+    print(f"Wrote locally verifiable demo artifact {out} (ephemeral key; not independently verifiable)")
     return 0
 
 
