@@ -1,93 +1,77 @@
-# cruzx-proofforge
+# CruzX ProofForge
 
-![CI](https://github.com/dhe-cruzer69/cruzx-proofforge/actions/workflows/ci.yml/badge.svg)
-![Coverage](https://img.shields.io/badge/coverage-90%25%2B-brightgreen)
-![OpenSSF](https://img.shields.io/badge/OpenSSF-Scorecard-blue)
-![SLSA](https://img.shields.io/badge/SLSA-provenance-green)
+![CI](https://github.com/dhe-cruzer69/Apollox3/actions/workflows/ci.yml/badge.svg)
 ![License](https://img.shields.io/badge/license-Apache%202.0-blue)
 
-**Don’t merge AI code until it proves itself.**
+**Proof artifacts for AI-assisted code changes — with explicit evidence boundaries.**
 
-Verifiable AI-generated code changes → signed `proof.json` artifacts, language-agnostic verification adapters, GitHub-native PR check runs, and policy-as-code merge gates.
+ProofForge is an early-stage Python project that hashes a caller-supplied change payload and creates an HMAC-SHA256 integrity signature. It includes a small FastAPI endpoint and a local proof-format acceptance script.
 
-Blacksteel Protocol v2.0 · 100/100 · 5★ Flagship
+## Current capability boundary
 
-## 30-Second Proof
+**Implemented in the inspected source:**
+- Canonical JSON serialization and SHA-256 payload digest.
+- HMAC-SHA256 signature generation and verification.
+- Required strong signing key from `CRUZX_SIGNING_KEY` or an explicit constructor argument.
+- Constant-time signature comparison.
+- FastAPI `/health` and `/proof` endpoints.
 
-```bash
-git clone https://github.com/dhe-cruzer69/cruzx-proofforge
-cd cruzx-proofforge
-cp .env.example .env
-make bootstrap
-make verify
-```
+**Not established by this repository's current implementation:**
+- Independent execution or validation of the tests listed in a payload.
+- GitHub PR checks, comments, merge gates, or GitHub App integration.
+- Cosign signatures, SLSA provenance, SBOM publication, or external attestation verification.
+- Language-agnostic verification adapters.
+- A 90% coverage floor or third-party OpenSSF score.
 
-```
-✅ BLACKSTEEL GATE PASSED — cosign-verified, SBOM-attached, ≥90% coverage
-```
+A valid HMAC proves that the signed manifest has not changed relative to the key holder's assertion. It does **not** prove that the asserted tests ran or passed. The `status` field reflects the caller-supplied `tests_passed` boolean and defaults to `failed` when that evidence is absent.
 
-## What It Does
+## Local setup
 
-AI coding tools often claim “success” without reproducible proof. cruzx-proofforge turns every AI-generated change into a signed, testable, auditable proof artifact that can be independently verified.
-
-### Core Differentiator
-- Language-agnostic verification adapters (Python, JavaScript, …)
-- Signed `proof.json` output (cosign keyless)
-- GitHub-native PR comments + check runs
-- Policy-as-code merge gates (`required_checks`, coverage drop limits, regression fail)
-
-## Quickstart
+Requires Python 3.11 or later.
 
 ```bash
-make bootstrap          # uv sync --frozen + pre-commit
-make dev                # local API (if needed)
-make test               # parallel pytest + coverage floor
-make security           # fail-closed ruff / mypy / bandit / pip-audit / trivy / gitleaks
-make verify             # full Blacksteel gate
+python -m venv .venv
+# Activate the environment using the command for your shell.
+python -m pip install -e ".[dev]"
+python -m pytest -q
 ```
 
-### Demo PR Flow
+Generate a strong signing key and keep it outside source control:
+
 ```bash
-export CRUZX_SIGNING_KEY="local-dev-key"
-make demo-pr            # produces proof.json + GitHub check run
+python -c "import secrets; print(secrets.token_hex(32))"
 ```
 
-## Example Policy
+Set the returned value as `CRUZX_SIGNING_KEY` in your process environment or secret manager. Never commit the key or paste it into issues, logs, or examples.
 
-```yaml
-policy:
-  required_checks:
-    - unit
-    - integration
-  fail_on_regression: true
-  max_allowed_coverage_drop: 2
-adapters:
-  - python
-  - javascript
+Run the optional API:
+
+```bash
+uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-## Acceptance Gate
+The API returns HTTP 503 for proof generation when a valid signing key is not configured.
 
-`make verify` succeeds only when a sample AI patch:
-1. Runs required tests
-2. Produces `proof.json`
-3. Signs the artifact
-4. Posts a GitHub check run (or local equivalent)
+## Proof verification model
 
-## Blacksteel Hardening
+A proof manifest includes:
+- `payload_sha256`: SHA-256 of canonicalized JSON input.
+- `signature`: HMAC-SHA256 over the payload digest.
+- `key_id`: non-secret fingerprint derived from the signing key.
+- `status`: a representation of the caller-provided test assertion.
 
-This repository follows the universal CruzX Blacksteel stack:
-- Fail-closed CI (no `|| true`)
-- SHA-pinned actions + `persist-credentials: false`
-- Coverage floor ≥ 90%
-- SBOM (CycloneDX) + keyless cosign + SLSA-style attestation
-- Performance budgets + OpenSSF Scorecard ready
+The verifier needs the same signing key. Key rotation and long-term verification-key management are not implemented yet.
 
-See `SECURITY.md`, `CONTRIBUTING.md`, `GOVERNANCE.md`, `RELEASE.md`.
+## CI and artifact boundary
 
-## Portfolio Position
+The GitHub Actions workflow runs lint, strict type checking, tests, secret scanning, dependency audit, Bandit and a local acceptance script. Its artifact-packaging job uploads a placeholder file; this is **not** a provenance attestation. CI does not require OIDC or repository write permissions for that step.
 
-First Wave flagship. Creates the reusable verification infrastructure used by the other nine CruzX Blacksteel repositories.
+## Security limitations
+
+- The current proof system is a single-key HMAC design, not a public-key signature or third-party attestation.
+- No key rotation, revocation, multi-tenant key isolation, external trust store, or durable verification service is implemented.
+- The local acceptance script uses an ephemeral demonstration key and simulated input; it is a format check, not evidence of external test execution.
+- Treat this repository as a prototype until the remaining trust, API, storage and integration controls are implemented and independently verified.
 
 ## License
 
